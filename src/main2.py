@@ -47,6 +47,13 @@ def create_tables():
     
     conn.commit()
 
+# Функция для выполнения EXPLAIN QUERY PLAN и вывода плана
+def explain_query(query, params=()):
+    print(f"\nЭкспликация плана выполнения для запроса: {query}")
+    plan = cursor.execute(f"EXPLAIN QUERY PLAN {query}", params).fetchall()
+    for row in plan:
+        print(row)
+
 # Вставка данных с использованием параметризированных запросов для безопасности и эффективности
 def insert_users():
     users = [
@@ -81,26 +88,30 @@ def insert_orders():
 # Оптимизированные функции с параметризацией и использованием JOIN
 
 def get_all_users():
-    return cursor.execute("SELECT * FROM users").fetchall()
+    query = "SELECT * FROM users"
+    explain_query(query)
+    return cursor.execute(query).fetchall()
 
 def get_user_by_id(user_id):
-    return cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    query = "SELECT * FROM users WHERE id = ?"
+    explain_query(query, (user_id,))
+    return cursor.execute(query, (user_id,)).fetchone()
 
 def get_orders_for_user(user_id):
-    return cursor.execute(
-        "SELECT * FROM orders WHERE user_id = ?", (user_id,)
-    ).fetchall()
+    query = "SELECT * FROM orders WHERE user_id = ?"
+    explain_query(query, (user_id,))
+    return cursor.execute(query, (user_id,)).fetchall()
 
 def get_products_by_category(category):
-    return cursor.execute(
-        "SELECT * FROM products WHERE category = ?", (category,)
-    ).fetchall()
+    query = "SELECT * FROM products WHERE category = ?"
+    explain_query(query, (category,))
+    return cursor.execute(query, (category,)).fetchall()
 
 # Использование агрегатных функций для подсчета общей стоимости заказов
 def get_total_order_value_for_user(user_id):
-    total = cursor.execute(
-        "SELECT SUM(quantity * price) FROM orders WHERE user_id = ?", (user_id,)
-    ).fetchone()[0]
+    query = "SELECT SUM(quantity * price) FROM orders WHERE user_id = ?"
+    explain_query(query, (user_id,))
+    total = cursor.execute(query, (user_id,)).fetchone()[0]
     
     # Обработка None в случае отсутствия заказов
     return total if total is not None else 0
@@ -114,6 +125,9 @@ def get_users_with_orders():
         LEFT JOIN orders o ON u.id = o.user_id
         ORDER BY u.id
     '''
+    
+    explain_query(query)
+    
     results = cursor.execute(query).fetchall()
     
     # Формируем структуру данных по пользователю с его заказами
@@ -141,27 +155,27 @@ def get_users_with_orders():
 
 # Закрытие соединения — рекомендуется делать в блоке finally или через контекстный менеджер
 def close_connection():
-    try:
-        conn.close()
-        print("Connection closed")
-    except Exception as e:
-        print(f"Error closing connection: {e}")
+     try:
+         conn.close()
+         print("Connection closed")
+     except Exception as e:
+         print(f"Error closing connection: {e}")
 
 # Основная логика программы с минимизацией повторений и улучшенной структурой
 def main():
     
-    create_tables()
+     create_tables()
     
-    insert_users()
+     insert_users()
     
-    insert_products()
+     insert_products()
     
      # Вставка заказов один раз — избегайте дублирования вызовов без необходимости
-    insert_orders()
+     insert_orders()
      
-     # Получение и вывод данных с использованием оптимизированных функций
-    users = get_all_users()
-    for user in users:
+     # Получение и вывод данных с использованием оптимизированных функций и анализа планов выполнения
+     users = get_all_users()
+     for user in users:
          print(f"User: {user}")
          
          total_value = get_total_order_value_for_user(user[0])
@@ -173,18 +187,18 @@ def main():
              print(f"\tOrder ID: {order[0]}, Product: {order[2]}, Quantity: {order[3]}, Price: {order[4]}")
          
      # Получение продуктов по категории — безопасно благодаря параметризации
-    electronics_products = get_products_by_category('Electronics')
-    print(f"Electronics products: {electronics_products}")
+     electronics_products = get_products_by_category('Electronics')
+     print(f"Electronics products: {electronics_products}")
      
      # Получение пользователей с их заказами через JOIN — более эффективно и читаемо
-    users_with_orders = get_users_with_orders()
-    for item in users_with_orders:
+     users_with_orders = get_users_with_orders()
+     for item in users_with_orders:
          user_info = item['user']
          print(f"User: {user_info[1]} ({user_info[2]} years old)")
          for order in item['orders']:
              print(f"\tOrder ID: {order['order_id']}, Product: {order['product']}")
              
-    close_connection()
+     close_connection()
 
 if __name__ == "__main__":
-   main()
+   main() 
