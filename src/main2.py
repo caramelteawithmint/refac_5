@@ -47,14 +47,14 @@ def create_tables():
     
     conn.commit()
 
-# Функция для выполнения EXPLAIN QUERY PLAN и вывода плана
+
 def explain_query(query, params=()):
     print(f"\nЭкспликация плана выполнения для запроса: {query}")
     plan = cursor.execute(f"EXPLAIN QUERY PLAN {query}", params).fetchall()
     for row in plan:
         print(row)
 
-# Вставка данных с использованием параметризированных запросов для безопасности и эффективности
+
 def insert_users():
     users = [
         ('Alice', 30, 'alice@example.com'),
@@ -116,7 +116,7 @@ def get_total_order_value_for_user(user_id):
     # Обработка None в случае отсутствия заказов
     return total if total is not None else 0
 
-# Получение пользователей с их заказами через JOIN — более эффективно
+# Получение пользователей с их заказами через JOIN
 def get_users_with_orders():
     query = '''
         SELECT u.id, u.name, u.age, u.email,
@@ -130,7 +130,7 @@ def get_users_with_orders():
     
     results = cursor.execute(query).fetchall()
     
-    # Формируем структуру данных по пользователю с его заказами
+    
     users_dict = {}
     
     for row in results:
@@ -153,7 +153,7 @@ def get_users_with_orders():
     
     return list(users_dict.values())
 
-# Закрытие соединения — рекомендуется делать в блоке finally или через контекстный менеджер
+
 def close_connection():
      try:
          conn.close()
@@ -161,7 +161,7 @@ def close_connection():
      except Exception as e:
          print(f"Error closing connection: {e}")
 
-# Основная логика программы с минимизацией повторений и улучшенной структурой
+
 def main():
     
      create_tables()
@@ -170,10 +170,10 @@ def main():
     
      insert_products()
     
-     # Вставка заказов один раз — избегайте дублирования вызовов без необходимости
+     
      insert_orders()
      
-     # Получение и вывод данных с использованием оптимизированных функций и анализа планов выполнения
+     
      users = get_all_users()
      for user in users:
          print(f"User: {user}")
